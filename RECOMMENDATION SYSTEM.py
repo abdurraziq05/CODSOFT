@@ -1,0 +1,48 @@
+import pandas as pd
+
+# Example movie dataset
+movies = pd.DataFrame({
+    'movie_id': [1, 2, 3, 4, 5],
+    'title': ['The Matrix', 'Titanic', 'The Lion King', 'Star Wars', 'Inception'],
+    'genre': ['Action|Sci-Fi', 'Drama|Romance', 'Animation|Family', 'Action|Adventure|Sci-Fi', 'Action|Sci-Fi']
+})
+
+# Example user preference (e.g., the user likes Action and Sci-Fi genres)
+user_preferences = ['Action', 'Sci-Fi']
+
+from sklearn.feature_extraction.text import CountVectorizer
+
+# Convert genres to bag-of-words representation
+vectorizer = CountVectorizer(tokenizer=lambda x: x.split('|'))
+genre_matrix = vectorizer.fit_transform(movies['genre'])
+
+# Display the vectorized genres
+print(genre_matrix.toarray())
+
+
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
+
+# Create a vector for the user's preferences
+user_vector = np.zeros(genre_matrix.shape[1])
+
+for preference in user_preferences:
+    user_vector += vectorizer.transform([preference]).toarray().flatten()
+
+# Normalize the user vector (optional, for better scaling)
+user_vector = user_vector / np.linalg.norm(user_vector)
+
+# Calculate the cosine similarity between the user vector and the movie genre matrix
+similarities = cosine_similarity(user_vector.reshape(1, -1), genre_matrix)
+
+# Show the similarity scores
+print(similarities)
+
+
+# Get the movie indices sorted by similarity (highest to lowest)
+recommended_indices = similarities.argsort()[0][::-1]
+
+# Show top 3 recommended movies
+top_recommendations = movies.iloc[recommended_indices[:3]]
+print("Top 3 Movie Recommendations:")
+print(top_recommendations[['title', 'genre']])
